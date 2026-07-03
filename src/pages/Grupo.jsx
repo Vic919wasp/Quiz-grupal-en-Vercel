@@ -39,11 +39,11 @@ export default function Grupo({ user }) {
     if (!nroHoja.trim()) { showAlert('Ingresá el número de hoja.','err'); return }
     if (!grupo?.version)  { showAlert('El grupo no tiene versión asignada.','err'); return }
     const total = Object.keys(answers).length
-    if (total < 20) { showAlert(`Faltan ${20 - total} preguntas.','err'); return }
+    if (total < 20) { showAlert(`Faltan ${20 - total} preguntas.`,'err'); return }
 
     const newId = aluId({ nroAlumno:nroHoja, escuela:grupo.escuela, curso:grupo.curso, fecha:grupo.fecha })
     if (alumnos.find(a => a.alu_id === newId)) {
-      showAlert(`Ya existe el alumno ${newId}.','err'); return
+      showAlert(`Ya existe el alumno ${newId}.`,'err'); return
     }
 
     setSaving(true)
