@@ -1,0 +1,323 @@
+// ══════════════════════════════════════════════════════════════════
+// CODIGOS:
+// Insights: R, Y, G, B
+// Gardner:  LI, LM, ES, MU, CK, IP, IA, NA
+// Operativo: CEL:x, PC:x, COM:x, MOD:x, CNT:x, GUS:x
+// 3 opciones por pregunta: A=0, B=1, C=2
+// ══════════════════════════════════════════════════════════════════
+
+export const IK = ['R','Y','G','B']
+export const GK = ['LI','LM','ES','MU','CK','IP','IA','NA']
+
+export const PD = {
+  R:{ label:'Rojo Fuego',    emoji:'🔴', hex:'#E63946', short:'Rojo',
+      desc:'Extrovertido · Racional · Directo, decidido y orientado a resultados.' },
+  Y:{ label:'Amarillo Sol',  emoji:'🟡', hex:'#E9A320', short:'Amarillo',
+      desc:'Extrovertido · Emocional · Sociable, entusiasta e inspirador.' },
+  G:{ label:'Verde Tierra',  emoji:'🟢', hex:'#2A9D8F', short:'Verde',
+      desc:'Introvertido · Emocional · Empático, leal y colaborativo.' },
+  B:{ label:'Azul Mar',      emoji:'🔵', hex:'#457B9D', short:'Azul',
+      desc:'Introvertido · Racional · Analítico, preciso y metódico.' },
+}
+
+export const GD = {
+  LI:{ label:'Lingüística',          emoji:'📝', hex:'#7C3AED', desc:'Comunicación efectiva · Palabras, narrativa, argumentación' },
+  LM:{ label:'Lógico-matemática',    emoji:'🔢', hex:'#0EA5E9', desc:'Resolución analítica · Lógica, patrones, razonamiento' },
+  ES:{ label:'Espacial',             emoji:'🎨', hex:'#F59E0B', desc:'Creatividad visual · Imágenes, diseño, orientación espacial' },
+  MU:{ label:'Musical',              emoji:'🎵', hex:'#EC4899', desc:'Sensibilidad a patrones · Ritmo, melodía, estructuras sonoras' },
+  CK:{ label:'Corporal-kinestésica', emoji:'⚽', hex:'#10B981', desc:'Habilidad práctica · Cuerpo, movimiento, destreza física' },
+  IP:{ label:'Interpersonal',        emoji:'🤝', hex:'#F97316', desc:'Conexión y colaboración · Empatía social, liderazgo grupal' },
+  IA:{ label:'Intrapersonal',        emoji:'🔮', hex:'#6366F1', desc:'Autoconciencia y reflexión · Autoconocimiento, introspección' },
+  NA:{ label:'Naturalista',          emoji:'🌿', hex:'#84CC16', desc:'Patrones sistémicos · Entorno natural, categorización' },
+}
+
+// ── ID concatenado del alumno ─────────────────────────────────────
+export function aluId(a) {
+  return `${a.nroAlumno||'?'}-${a.escuela||'?'}-${a.curso||'?'}-${a.fecha||'?'}`
+}
+
+// ── Calcular perfiles a partir de respuestas ──────────────────────
+export function calcProfiles(version, answers) {
+  const ins = { R:0, Y:0, G:0, B:0 }
+  const gar = { LI:0, LM:0, ES:0, MU:0, CK:0, IP:0, IA:0, NA:0 }
+  const op  = { cel:'', pc:'', comp:'', mod:'', cont:'', gus:'' }
+
+  const qs = QUESTIONS[version] || []
+  Object.entries(answers).forEach(([qi, oi]) => {
+    const q = qs[+qi]
+    if (!q) return
+    const code = q[2]?.[+oi]  // q = [texto, opts, codes]
+    if (!code) return
+    if      (code.startsWith('CEL:')) op.cel  = code.split(':')[1]
+    else if (code.startsWith('PC:'))  op.pc   = code.split(':')[1]
+    else if (code.startsWith('COM:')) op.comp = code.split(':')[1]
+    else if (code.startsWith('MOD:')) op.mod  = code.split(':')[1]
+    else if (code.startsWith('CNT:')) op.cont = code.split(':')[1]
+    else if (code.startsWith('GUS:')) op.gus  = code.split(':')[1]
+    else if (IK.includes(code))  ins[code]++
+    else if (GK.includes(code))  gar[code]++
+  })
+
+  const dI = IK.reduce((a,b) => ins[a] >= ins[b] ? a : b)
+  const dG = GK.reduce((a,b) => gar[a] >= gar[b] ? a : b)
+
+  return { ins, gar, op, dI, dG }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PREGUNTAS — 20 por versión, 3 opciones c/u
+// Formato: [texto, [optA, optB, optC], [codeA, codeB, codeC]]
+// ══════════════════════════════════════════════════════════════════
+export const QUESTIONS = {
+A: [
+["Estás en los últimos minutos del partido, tu equipo pierde y la pelota llega a tus pies. ¿Qué hacés?",
+ ["Voy al frente sin dudar, la presión me activa y quiero definir yo","Le doy la pelota al compañero mejor posicionado y lo apoyo","Calculo la situación, leo los espacios y elijo el movimiento más inteligente"],
+ ["R","G","B"]],
+["Cuando en clase explican algo nuevo y complicado, ¿qué te ayuda más a entenderlo?",
+ ["Escuchar la explicación y anotarlo con mis propias palabras","Ver un esquema, mapa o imagen que lo muestre visualmente","Practicarlo o moverme; aprendo haciendo, no escuchando"],
+ ["LI","ES","CK"]],
+["En un trabajo grupal, ¿cuál es el rol que tomás de forma natural?",
+ ["El que toma decisiones y empuja al grupo a avanzar","El que anima, genera ideas y hace que sea divertido","El que analiza, organiza la información y cuida que todo esté bien hecho"],
+ ["R","Y","B"]],
+["¿Cuál de estas actividades te resulta más cómoda y natural?",
+ ["Explicar algo con palabras claras o escribir un texto persuasivo","Resolver un acertijo, problema matemático o puzzle lógico","Tocar un instrumento, cantar o identificar ritmos y melodías"],
+ ["LI","LM","MU"]],
+["Cuando hay un partido importante del mundial, ¿cómo te enterás en tiempo real?",
+ ["Por el celular: apps, redes y notificaciones en vivo, siempre conectado","Por la tele o la radio; no uso tanto el celular para seguir los partidos","Me entero por lo que me cuentan; no siempre tengo acceso fácil en ese momento"],
+ ["CEL:cel_datos","CEL:tv","CEL:sin_disp"]],
+["Cuando observás la naturaleza, ¿qué te llama más la atención?",
+ ["Los sonidos del ambiente: pájaros, agua, viento, ritmos naturales","Las conexiones entre seres vivos: quién come a quién, cómo se adaptan","Las formas, colores y patrones visuales de plantas y animales"],
+ ["MU","NA","ES"]],
+["Si tu grupo tiene que presentar un trabajo, ¿qué parte preferís tomar?",
+ ["La redacción: contar el tema con claridad, buen vocabulario y estilo","El diseño visual: la presentación, los colores y cómo se ve todo","Asegurarme de que todos estén incluidos y que el grupo funcione bien"],
+ ["LI","ES","IP"]],
+["¿Qué tipo de contenido o actividad te llama más la atención en clase?",
+ ["Debates, exposiciones orales o escritura de textos argumentativos","Problemas para resolver, desafíos lógicos o experimentos con datos","Juegos de roles, actuaciones o actividades físicas que me hagan moverme"],
+ ["LI","LM","CK"]],
+["Si te piden preparar un análisis de un partido para presentar en clase, ¿con qué herramienta lo hacés?",
+ ["Con mi compu o notebook que tengo en casa para estos trabajos","Con el celular; es lo que más uso para tareas y búsquedas del colegio","En la compu del colegio o la biblioteca; en casa no tengo acceso"],
+ ["PC:pc_propia","PC:solo_cel","PC:pc_cole"]],
+["Cuando escuchás música, ¿qué es lo que más disfrutás o notás?",
+ ["La letra: las palabras, las metáforas, el mensaje que tiene la canción","El ritmo, la estructura musical y cómo encajan todos los instrumentos","La energía que me da para moverme, bailar o hacer algo físico"],
+ ["LI","MU","CK"]],
+["El árbitro cobra un penal injusto contra tu equipo. ¿Cómo reaccionás?",
+ ["Me enojo fuerte y lo digo sin filtro; me parece una falta de respeto","Me frustro pero lo guardo; no quiero que el ambiente se ensucie","Analizo si el VAR lo debería haber revisado y qué dice el reglamento"],
+ ["R","G","B"]],
+["¿Cuál de estas frases te describe mejor dentro de un grupo?",
+ ["Soy el que habla, explica y conecta las ideas con claridad ante los demás","Soy el que escucha a todos, contiene y se asegura de que nadie quede afuera","Soy el que reflexiona, cuestiona y propone perspectivas distintas"],
+ ["LI","IP","IA"]],
+["¿Cómo preferís aprender algo completamente nuevo?",
+ ["Leyendo o escuchando una explicación clara y detallada antes de arrancar","Viendo un video, imagen o esquema que lo muestre de forma visual","Tirándome a hacerlo directamente con el cuerpo o las manos"],
+ ["LI","ES","CK"]],
+["En entrenamientos o clases prácticas, ¿en qué momento aprendés mejor?",
+ ["Cuando me dejan practicar solo a mi ritmo, sin que me interrumpan","En dinámicas grupales, competencias o desafíos entre compañeros","Cuando el profe explica paso a paso con claridad y orden antes de empezar"],
+ ["MOD:solo","MOD:grupo","MOD:paso_paso"]],
+["Si pudieras ser cualquier tipo de jugador en el mundial, ¿cuál elegirías?",
+ ["El goleador: el que define, arriesga y aparece cuando más se necesita","El 10: el que inventa, entusiasma y hace magia con la pelota","El estratega: visión de juego, inteligencia táctica, siempre bien posicionado"],
+ ["R","Y","B"]],
+["¿Cuál de estas actividades disfrutarías más en un sábado libre?",
+ ["Resolver un desafío mental: ajedrez, acertijos, aprender a programar algo","Dibujar, diseñar, fotografiar o crear algo visual desde cero","Hacer deporte, bailar, cocinar o mover el cuerpo de cualquier forma"],
+ ["LM","ES","CK"]],
+["Cuando tenés que tomar una decisión importante, ¿qué pesa más?",
+ ["La lógica y los datos: analizo todo con calma antes de moverme","Lo que van a sentir las personas que me importan con esa decisión","Mi instinto y mis valores: lo que siento profundamente que es correcto"],
+ ["B","IP","IA"]],
+["¿Qué te resulta más fácil recordar sin esfuerzo?",
+ ["Nombres, historias, conversaciones y palabras exactas de lo que dijeron","Caras, lugares, imágenes y cómo se veían las cosas visualmente","Canciones, melodías y ritmos que escuché aunque haya pasado mucho tiempo"],
+ ["LI","ES","MU"]],
+["Cuando tu profe explica algo nuevo y complicado, ¿qué tan rápido lo captás?",
+ ["Lo entiendo enseguida; si me lo explican una vez, generalmente ya lo tengo","Lo entiendo mejor si lo veo con ejemplos concretos o en acción","Necesito que lo repitan o practicarlo varias veces para que me quede de verdad"],
+ ["COM:rapido","COM:visual","COM:practica"]],
+["¿Cuál de estas frases te representa mejor en tu forma de relacionarte?",
+ ["Me energiza trabajar con otros y me resulta fácil conectar con personas nuevas","Prefiero los vínculos profundos y me conozco bien a mí mismo/a","Identifico patrones en las personas y en el entorno natural con facilidad"],
+ ["IP","IA","NA"]],
+],
+
+B: [
+["Estás en el recreo y dos compañeros discuten fuerte. Nadie interviene. ¿Qué hacés?",
+ ["Me meto de inmediato y les digo directamente que se calmen y lo resuelvan","Me acerco con algo liviano para bajar la tensión sin generar más conflicto","Evalúo bien qué causó el problema antes de intervenir para no empeorar nada"],
+ ["R","Y","B"]],
+["¿Cuál de estas tareas te resulta más natural y fluida?",
+ ["Escribir un texto persuasivo, contar una historia o armar un discurso","Aprender una coreografía, practicar deporte o armar algo con las manos","Observar y categorizar plantas, animales o fenómenos del entorno natural"],
+ ["LI","CK","NA"]],
+["Ante una jugada difícil que tenés que aprender, ¿qué te ayuda más?",
+ ["Que alguien te la explique detalladamente con palabras y contexto","Verla en video o en una pizarra con dibujos y esquemas claros","Practicarla repetidamente hasta que el cuerpo la incorpore de forma automática"],
+ ["LI","ES","CK"]],
+["¿Qué sentís cuando escuchás una canción que te gusta mucho?",
+ ["Presto atención a la letra y analizo qué quiso decir el artista con eso","Noto la estructura: el ritmo, la armonía y cómo está construida musicalmente","El cuerpo se me mueve solo; necesito bailar o moverme, no puedo quedarme quieto"],
+ ["LI","MU","CK"]],
+["Cuando querés aprender algo nuevo para el colegio, ¿qué forma te resulta más cómoda?",
+ ["Jugar, practicar retos o resolver problemas de forma activa y en movimiento","Ver videos, imágenes o infografías que expliquen todo de forma visual","Leer, investigar y analizar información a mi propio ritmo y con calma"],
+ ["CNT:activo","CNT:visual","CNT:lectura"]],
+["¿Cómo notás mejor los cambios en la naturaleza o en tu entorno?",
+ ["Los escucho: cambios en sonidos, silencios o el volumen del ambiente","Los identifico por patrones: ciclos, comportamientos, migraciones, ritmos","Los analizo: busco la causa lógica de por qué están ocurriendo esos cambios"],
+ ["MU","NA","LM"]],
+["Tu profe de historia les pide que cuenten un evento importante. ¿Cómo lo hacés?",
+ ["Con un texto narrativo bien escrito y con vocabulario preciso y claro","Con una línea de tiempo, estadísticas o un esquema lógico y ordenado","Con una dramatización, roleplay o actuación del evento con el cuerpo"],
+ ["LI","LM","CK"]],
+["¿Qué tipo de líder te parece más efectivo para un equipo?",
+ ["El que habla bien, comunica con claridad y convence con sus argumentos","El que escucha a todos, cuida el clima del grupo y genera confianza genuina","El que analiza datos, piensa estratégicamente y toma decisiones sólidas"],
+ ["Y","G","B"]],
+["Pensá en las clases que más disfrutaste. ¿Qué tenían en común?",
+ ["Siempre había algo concreto para hacer, producir o resolver por mi cuenta","Había trabajo en equipo, intercambio real y buena energía entre todos","Estaban bien organizadas, con explicaciones claras y una lógica ordenada"],
+ ["GUS:practica","GUS:grupal","GUS:orden"]],
+["¿Cómo manejás el estrés justo antes de algo importante?",
+ ["Me activo: entro en modo rendimiento, me concentro y la adrenalina me ayuda","Busco tranquilidad: respiro, me quedo solo o hablo con alguien de confianza","Repaso todo mentalmente para estar seguro de que preparé bien cada detalle"],
+ ["R","G","B"]],
+["Si pudieras diseñar un proyecto para el colegio, ¿cuál elegirías?",
+ ["Una campaña de comunicación: textos, discursos y contenido escrito impactante","Un experimento o análisis de datos sobre algún problema real del entorno","Una propuesta de mejora grupal: resolver conflictos o mejorar el clima del grupo"],
+ ["LI","LM","IP"]],
+["¿Qué hacés cuando tenés tiempo libre y estás completamente solo?",
+ ["Leo, escribo, escucho podcasts o consumo contenido que me haga pensar","Dibujo, diseño, fotografío o exploro algo visual y creativo libremente","Reflexiono, escribo en un diario o me quedo pensando en lo que quiero"],
+ ["LI","ES","IA"]],
+["¿Cuál de estas afirmaciones te representa mejor?",
+ ["Me resulta fácil expresar mis ideas con claridad, tanto oral como escrito","Tengo buena memoria para caras, lugares y la disposición espacial de las cosas","Soy muy sensible a los ritmos, melodías y cambios en el sonido del ambiente"],
+ ["LI","ES","MU"]],
+["Cuando tenés que preparar algo importante para el colegio, ¿cómo preferís hacerlo?",
+ ["Solo y a mi ritmo; me concentro mucho mejor sin interrupciones de ningún tipo","Con otros; el intercambio y la energía del grupo me ayuda a rendir más","Solo para pensar la estructura, y luego con otros para revisar y completar"],
+ ["MOD:solo","MOD:grupo","MOD:mixto_plan"]],
+["¿Qué tipo de película te gustaría ver sobre un mundial de fútbol?",
+ ["Dramática e intensa, con rivalidades, tensión y batallas por el título","Centrada en vínculos humanos: familia, sacrificio y compañerismo real","Un documental técnico sobre las tácticas y decisiones que cambiaron el torneo"],
+ ["R","G","B"]],
+["¿Cuál de estas frases te describe mejor en general?",
+ ["Me gusta ser el portavoz del grupo: hablar, presentar y defender ideas","Soy muy bueno leyendo el estado emocional de las personas que me rodean","Identifico conexiones entre cosas que parecen no tener ninguna relación"],
+ ["LI","IP","NA"]],
+["¿Qué hacés cuando algo no sale como esperabas después de mucho esfuerzo?",
+ ["Me enojo un momento pero lo proceso rápido y me enfoco ya en la siguiente acción","Me cuesta soltarlo, sobre todo si siento que de alguna forma afecté a alguien","Analizo qué falló con precisión para entender la causa real del problema"],
+ ["R","G","B"]],
+["¿Qué tipo de inteligencia te parece más valiosa en la vida cotidiana?",
+ ["La capacidad de comunicarse bien y persuadir con las palabras adecuadas","El autoconocimiento: saber quién sos, qué querés y cuáles son tus límites","La capacidad de entender el entorno natural y sus sistemas y patrones"],
+ ["LI","IA","NA"]],
+["Cuando hay un partido importante del mundial, ¿cómo te enterás de lo que pasa?",
+ ["Por el celular: notificaciones, apps y redes sociales en tiempo real","Por la tele o la radio en casa; no dependo del celular para seguir los partidos","Me entero por lo que me cuentan otros; no siempre tengo acceso fácil"],
+ ["CEL:cel_datos","CEL:tv","CEL:sin_disp"]],
+["¿Qué es lo que más disfrutás de un partido de fútbol?",
+ ["La adrenalina, la competencia y el instinto puro de querer ganar a toda costa","El compañerismo, la confianza y el trabajo colectivo silencioso del equipo","La táctica, la estrategia y la inteligencia del juego bien pensado y ejecutado"],
+ ["R","G","B"]],
+],
+
+C: [
+["Llegás a un torneo con un equipo que nunca jugó junto. Cinco minutos antes, ¿qué hacés?",
+ ["Asigno posiciones, doy indicaciones concretas y nos ponemos en marcha ya","Me aseguro de que todos estén tranquilos, preparados y se sientan listos","Propongo una táctica básica y les explico cómo vamos a jugar el partido"],
+ ["R","G","B"]],
+["¿Cuál de estas afirmaciones te representa mejor cuando aprendés?",
+ ["Aprendo leyendo, escribiendo y explicándolo con mis propias palabras","Aprendo analizando patrones, resolviendo problemas y buscando la lógica interna","Aprendo reflexionando en silencio y conectando con mis propias experiencias"],
+ ["LI","LM","IA"]],
+["Tu profe propone hacer algo creativo sobre el mundial. ¿Qué proponés vos?",
+ ["Escribir una crónica periodística o un análisis narrativo del torneo","Armar una visualización de datos: goles, estadísticas y rendimiento visual","Crear una coreografía, performance o pieza musical inspirada en el mundial"],
+ ["LI","LM","MU"]],
+["¿Cuál de estas experiencias en la naturaleza te atrae más?",
+ ["Escuchar los sonidos del bosque, el mar o la lluvia con mucha atención","Identificar especies y entender las relaciones entre los seres vivos del lugar","Hacer senderismo, trepar, nadar o cualquier actividad física al aire libre"],
+ ["MU","NA","CK"]],
+["Si te dieran un trabajo de investigación del mundial para presentar, ¿cómo lo harías?",
+ ["Con mi compu o notebook en casa; la tengo disponible para estos trabajos","Con el celular; es lo que más uso para búsquedas y tareas del colegio","En la compu del colegio o la biblioteca; en casa no tengo acceso a ninguna"],
+ ["PC:pc_propia","PC:solo_cel","PC:pc_cole"]],
+["Cuando tu profe explica algo nuevo y complicado, ¿qué tan rápido lo captás?",
+ ["Lo entiendo rápido; si me lo explican una vez, generalmente ya lo tengo","Lo entiendo mejor con ejemplos concretos o si lo veo en acción directamente","Necesito que lo repitan o practicarlo varias veces para que me quede de verdad"],
+ ["COM:rapido","COM:visual","COM:practica"]],
+["¿Cuál de estas descripciones te parece más parecida a vos?",
+ ["Soy bueno/a contando historias y eligiendo siempre las palabras más justas","Soy muy sensible a la música: la noto, la recuerdo y me afecta profundamente","Soy muy coordinado/a y aprendo cualquier habilidad física con mucha facilidad"],
+ ["LI","MU","CK"]],
+["Un compañero está triste y solo en el recreo. ¿Qué hacés?",
+ ["Me acerco directo y le pregunto qué le pasa sin rodeos","Me siento a su lado sin decir nada, solo para que no esté solo/a","Lo observo primero para evaluar si quiere compañía o prefiere estar solo"],
+ ["R","G","B"]],
+["¿Cuál de estas afirmaciones sobre vos mismo/a es más verdadera?",
+ ["Me conozco bien: sé cómo reacciono, cuáles son mis límites y mis fortalezas","Soy muy sensible al estado emocional de las personas que me rodean siempre","Identifico patrones en la naturaleza y en el entorno con mucha facilidad"],
+ ["IA","IP","NA"]],
+["Cuando tenés que preparar algo importante para el colegio, ¿cómo preferís hacerlo?",
+ ["Solo/a y a mi ritmo; me concentro mejor sin interrupciones de ningún tipo","Con otros; el intercambio y la energía del grupo me ayuda a rendir más","En pareja o en un grupo pequeño de personas de confianza"],
+ ["MOD:solo","MOD:grupo","MOD:pareja"]],
+["Si pudieras elegir cómo te evalúan en el colegio, ¿qué preferirías?",
+ ["Un examen escrito con desarrollo de ideas y argumentación propia","Una presentación visual, maqueta o proyecto creativo elaborado","Una demostración práctica o actuación de lo que aprendí con el cuerpo"],
+ ["LI","ES","CK"]],
+["¿Qué te motiva más para esforzarte en algo importante?",
+ ["La posibilidad de ganar o de demostrar que soy completamente capaz de hacerlo","Saber que mi esfuerzo va a ayudar o beneficiar a alguien que me importa","Crecer como persona y entenderme mejor a través de todo el proceso"],
+ ["R","G","IA"]],
+["¿Cuál de estas actividades te parece más interesante para aprender?",
+ ["Escribir un blog, grabar un podcast o crear contenido propio para redes","Aprender a programar, crear una app o resolver problemas de código","Hacer voluntariado, mediar conflictos o mejorar el clima de un grupo real"],
+ ["LI","LM","IP"]],
+["¿Cuál de estas experiencias describe mejor cómo sos con tu entorno?",
+ ["Siempre noto cambios en los animales, plantas y el ambiente antes que otros","El ruido o la música del ambiente me afecta mucho; soy muy sensible al sonido","Entiendo las motivaciones de las personas con facilidad, aunque no las conozca"],
+ ["NA","MU","IP"]],
+["Tu equipo ganó el partido, pero vos no jugaste bien. ¿Cómo lo vivís?",
+ ["Me frustro internamente aunque el equipo haya ganado; quiero rendir mejor yo","Me alegro por el equipo pero me guardo la reflexión tranquilo sobre mi juego","Analizo mis errores con precisión concreta para no repetirlos la próxima vez"],
+ ["R","G","B"]],
+["¿Qué aspecto del trabajo en equipo te parece más subestimado en general?",
+ ["La actitud ganadora que contagia al grupo entero aunque vayan perdiendo","La confianza profunda que se construye lentamente con el tiempo entre todos","La preparación y el análisis previo que evitan errores completamente evitables"],
+ ["R","G","B"]],
+["¿Cuál de estas frases refleja mejor tu forma de pensar en general?",
+ ["Las palabras tienen poder: elegirlas bien cambia cómo te ven los demás","Las personas son lo más importante: las relaciones lo son absolutamente todo","La naturaleza tiene respuestas que los humanos todavía no terminamos de entender"],
+ ["LI","IP","NA"]],
+["¿Qué es lo que más te gusta de las clases o actividades del colegio?",
+ ["Cuando hay algo concreto para hacer, producir o resolver de forma activa","Cuando hay espacio para reflexionar en silencio y dar mi propia opinión","Cuando combinan distintos tipos de actividades diferentes en una misma clase"],
+ ["GUS:practica","GUS:reflexion","GUS:variedad"]],
+["¿Qué te da más satisfacción al terminar algo realmente difícil?",
+ ["Haber logrado el objetivo con eficiencia y dentro del tiempo que me propuse","Que todos los involucrados hayan quedado conformes, bien y sin conflictos","Que el resultado sea sólido, bien hecho y sin errores detectables en ningún lado"],
+ ["R","G","B"]],
+["¿Cuál de estas actividades te gustaría probar si pudieras elegir libremente?",
+ ["Aprender arquitectura, diseño industrial o ilustración técnica detallada","Aprender a tocar un instrumento o producir música electrónica desde cero","Hacer voluntariado, coaching o trabajo directo con comunidades reales"],
+ ["ES","MU","IP"]],
+],
+
+D: [
+["Tu grupo presenta sobre el impacto del fútbol en la sociedad. ¿Qué parte tomás?",
+ ["La redacción: cómo contar el tema con claridad, estilo e impacto real","El diseño visual: cómo se ve, la presentación y el layout general","La reflexión final: qué aprendimos y qué significa todo esto para nosotros"],
+ ["LI","ES","IA"]],
+["¿Cuál de estas afirmaciones se parece más a tu forma de ser en general?",
+ ["Me resulta fácil expresar mis ideas con claridad, tanto oral como por escrito","Suelo encontrar patrones y lógica donde otros solo ven caos o complejidad","Aprendo mejor cuando puedo hacerlo con el cuerpo, no solo con la mente"],
+ ["LI","LM","CK"]],
+["Cuando te dan tiempo libre en clase, ¿qué hacés naturalmente?",
+ ["Leo, escribo o consumo contenido que me haga pensar sobre algo interesante","Dibujo, diseño o exploro algo visual y creativo con libertad total","Reflexiono sobre mi vida, mis metas o mis emociones del momento"],
+ ["LI","ES","IA"]],
+["¿Cuál de estas descripciones del fútbol te parece más verdadera?",
+ ["Es un lenguaje universal que une culturas completamente diferentes entre sí","Es un sistema complejo donde la táctica y la lógica son absolutamente decisivas","Es una danza colectiva con ritmo, cadencia y sincronía perfecta entre jugadores"],
+ ["LI","LM","MU"]],
+["Cuando querés enterarte de lo que pasa en el mundial, ¿qué usás más?",
+ ["El celular siempre: apps, redes y notificaciones en tiempo real todo el día","La televisión o la radio; no dependo del celular para seguir esto","Me entero por lo que me cuentan; no siempre tengo acceso fácil en ese momento"],
+ ["CEL:cel_datos","CEL:tv","CEL:sin_disp"]],
+["¿Qué te parece más fascinante del mundo natural?",
+ ["Los sonidos: el canto de los pájaros, el viento, el ritmo del mar","La complejidad: cómo todo está profundamente interconectado en un ecosistema","La lógica: las leyes físicas y matemáticas que explican todo lo que existe"],
+ ["MU","NA","LM"]],
+["Si pudieras elegir cómo aprender un tema difícil, ¿qué elegirías?",
+ ["Leer un texto bien escrito y claro que lo explique todo paso a paso","Resolver ejercicios y problemas que me obliguen a aplicar lo que aprendí","Practicarlo físicamente o a través de una simulación completamente real"],
+ ["LI","LM","CK"]],
+["Cuando tenés que preparar algo importante para el colegio, ¿cómo preferís hacerlo?",
+ ["Solo/a y a mi ritmo, sin interrupciones; me concentro mucho mejor así","Con otros; la energía del grupo y el intercambio me ayudan a rendir","Solo/a para pensar la estructura, con otros para revisar y completar después"],
+ ["MOD:solo","MOD:grupo","MOD:mixto_plan"]],
+["¿Cuál de estas habilidades te parece que es tu punto más fuerte?",
+ ["Comunicarme bien: escribir, hablar y explicar con claridad a cualquiera","Razonar: encontrar lógica, patrones y resolver problemas difíciles y complejos","Conectar con otros: empatía, trabajo en equipo y liderazgo genuinamente humano"],
+ ["LI","LM","IP"]],
+["Cuando pensás en el medioambiente, ¿qué te preocupa o interesa más?",
+ ["Los sonidos que se están perdiendo: especies que ya no se escuchan","La pérdida de biodiversidad y los desequilibrios graves en los ecosistemas","Los datos y la ciencia: los números concretos que muestran el impacto real"],
+ ["MU","NA","LM"]],
+["¿Qué hacés cuando tenés un problema que no podés resolver de ninguna forma?",
+ ["Lo escribo o lo cuento en voz alta para aclararlo con palabras propias","Lo analizo sistemáticamente, descartando opciones de forma metódica","Lo reflexiono en soledad hasta encontrar la respuesta desde muy adentro"],
+ ["LI","LM","IA"]],
+["¿Cuál de estas frases te describe mejor con los demás?",
+ ["Me resulta fácil hacer reír a la gente y generar buen clima en cualquier grupo","Soy de los que escuchan de verdad y las personas confían en mí para hablar","Soy bueno/a leyendo cómo se siente alguien aunque no lo diga con palabras"],
+ ["Y","G","IP"]],
+["Si te pidieran hacer un trabajo de investigación, ¿con qué lo harías?",
+ ["Con mi compu o notebook en casa; la tengo para este tipo de trabajos","Con el celular; es lo que uso para casi todos los trabajos del colegio","En la compu del colegio o la biblioteca; en casa no tengo acceso a ninguna"],
+ ["PC:pc_propia","PC:solo_cel","PC:pc_cole"]],
+["¿Qué tipo de rol te sale más naturalmente dentro de un equipo?",
+ ["El vocero: el que habla, presenta y representa al grupo hacia afuera siempre","El motivador: el que contagia energía y hace que todos quieran participar","El reflexivo: el que para, piensa profundo y aporta perspectivas distintas"],
+ ["LI","Y","IA"]],
+["¿Cuál de estas experiencias describiría mejor una gran clase o taller ideal?",
+ ["Hubo espacio para expresarse, debatir y usar las palabras con poder real","Había movimiento, actuación o actividad física que activaba completamente el cuerpo","Había reflexión personal profunda y conexión real y genuina entre todos"],
+ ["LI","CK","IA"]],
+["¿Cuál de estas frases es más verdadera para vos en tu día a día?",
+ ["Entiendo los sistemas naturales y cómo todas sus partes se conectan entre sí","Puedo imaginar claramente cómo se ve algo en 3D antes de construirlo","Puedo anticipar cómo se va a sentir alguien antes incluso de que lo diga"],
+ ["NA","ES","IP"]],
+["¿Qué te parece más importante en un jugador de fútbol profesional?",
+ ["La creatividad y la capacidad de inventar jugadas que nadie vio venir nunca","La conexión con los compañeros y la capacidad de leer lo que necesitan","La fortaleza mental y el autoconocimiento real para rendir bajo presión extrema"],
+ ["Y","G","IA"]],
+["¿Cuál de estas actividades te gustaría probar si pudieras elegir libremente?",
+ ["Escribir un libro, guion o serie de podcasts sobre algo que te apasiona","Aprender programación, robótica o inteligencia artificial desde cero","Aprender a tocar un instrumento o producir música electrónica propia"],
+ ["LI","LM","MU"]],
+["¿Qué tipo de contenido preferís cuando aprendés algo completamente nuevo?",
+ ["Actividades prácticas, juegos o retos que me pongan en acción y movimiento","Videos, imágenes o infografías que lo muestren de forma visual y clara","Debates, explicaciones orales y preguntas al profe o a compañeros del grupo"],
+ ["CNT:activo","CNT:visual","CNT:debate"]],
+["¿Qué posición del fútbol refleja mejor tu forma de ser en la vida?",
+ ["Extremo creativo: impredecible, desequilibrante y completamente apasionado","Mediocampista: leal, sostén del grupo, siempre disponible para los demás","Líbero inteligente: ordenado, estratégico y con visión clara de todo el juego"],
+ ["Y","G","B"]],
+],
+}
